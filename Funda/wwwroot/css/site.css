@@ -4,14 +4,6 @@ html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
-main {
-    display: flex;
-}
-
-main > article {
-    display: flex;
-}
-
 h1:focus {
     outline: none;
 }

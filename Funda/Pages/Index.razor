@@ -4,14 +4,17 @@
 
 <PageTitle>Index</PageTitle>
 
-<button class="btn" @onclick="Calculate">Calculate</button>
+<div class="flex flex-row h-64 justify-center items-end">
+    <select class="select w-full max-w-xs" @bind="selectedOption">
+        <option value="@TopBrokersOption" selected>Top 10 Makelaars</option>
+        <option value="@TopBrokersWithTuinOption">Top 10 Makelaars with tuin objects</option>
+    </select>
 
-<select class="select w-full max-w-xs" @bind="selectedOption">
-    <option value="@TopBrokersOption" selected>Top 10 Makelaars</option>
-    <option value="@TopBrokersWithTuinOption">Top 10 Makelaars with tuin objects</option>
-</select>
+    <button class="btn ml-10" @onclick="Calculate">Calculate</button>
+</div>
 
-<div class="flex justify-center items-center">
+
+<div class="flex flex-1 justify-center mt-20">
     @if(topBrokers?.Count > 0)
 {
         <div class="overflow-x-auto">
