@@ -6,9 +6,9 @@
 
 <button class="btn" @onclick="Calculate">Calculate</button>
 
-<select class="select w-full max-w-xs">
-    <option selected>Top 10 Makelaars</option>
-    <option>Top 10 Makelaars with tuin objects</option>
+<select class="select w-full max-w-xs" @bind="selectedOption">
+    <option value="@TopBrokersOption" selected>Top 10 Makelaars</option>
+    <option value="@TopBrokersWithTuinOption">Top 10 Makelaars with tuin objects</option>
 </select>
 
 <div class="flex justify-center items-center">
@@ -48,6 +48,10 @@ else if (percentageCompleted > 0)
 
 
 @code {
+    private const string TopBrokersOption = "topBrokers";
+    private const string TopBrokersWithTuinOption = "topBrokersWithTuin";
+
+    private string selectedOption = TopBrokersOption;
     private int pageNr;
     private int percentageCompleted;
     private Dictionary<string, int> topBrokers;
@@ -57,7 +61,14 @@ else if (percentageCompleted > 0)
         pageNr = 0;
         percentageCompleted = 0;
         topBrokers = new Dictionary<string, int>();
-        List<SaleObject> saleObjects = new List<SaleObject>();
+
+        var saleObjects = new List<SaleObject>();
+        var baseUrl = "http://partnerapi.funda.nl/feeds/Aanbod.svc/json/ac1b0b1572524640a0ecc54de453ea9f/?type=koop&zo=/amsterdam/";
+
+        if(selectedOption == TopBrokersWithTuinOption)
+        {
+            baseUrl = $"{baseUrl}/tuin/";
+        }
 
         using (var client = new HttpClient())
         {
@@ -68,7 +79,7 @@ else if (percentageCompleted > 0)
                 try
                 {
                     pageNr++;
-                    var url = $"http://partnerapi.funda.nl/feeds/Aanbod.svc/json/ac1b0b1572524640a0ecc54de453ea9f/?type=koop&zo=/amsterdam/&page={pageNr}&pagesize=25";
+                    var url = $"{baseUrl}&page={pageNr}&pagesize=25";
                     salesData = await client.GetFromJsonAsync<SalesData>(url);
 
                     saleObjects.AddRange(salesData.SaleObjects);
