@@ -63,15 +63,31 @@ else if (percentageCompleted > 0)
     {
         pageNr = 0;
         percentageCompleted = 0;
-        topBrokers = new Dictionary<string, int>();
+        topBrokers = selectedOption == TopBrokersOption ? await GetTopBrokers(withTuin: false) : await GetTopBrokers(withTuin: true);
 
-        var saleObjects = new List<SaleObject>();
+        StateHasChanged();
+    }
+
+    private async Task<Dictionary<string, int>> GetTopBrokers(bool withTuin, int top = 10)
+    {
+        var saleObjects = await GetSaleObjects(withTuin);
+
+        var brokerSaleObjects = saleObjects.GroupBy(s => s.BrokerName);
+        var orderedBrokerSaleObjects = brokerSaleObjects.OrderByDescending(group => group.Count());
+
+        return orderedBrokerSaleObjects.Take(top).ToDictionary(group => group.Key, group => group.Count());
+    } 
+
+    private async Task<List<SaleObject>> GetSaleObjects(bool withTuin = false)
+    {
         var baseUrl = "http://partnerapi.funda.nl/feeds/Aanbod.svc/json/ac1b0b1572524640a0ecc54de453ea9f/?type=koop&zo=/amsterdam/";
 
-        if(selectedOption == TopBrokersWithTuinOption)
+        if(withTuin)
         {
             baseUrl = $"{baseUrl}/tuin/";
         }
+
+        var saleObjects = new List<SaleObject>();
 
         using (var client = new HttpClient())
         {
@@ -95,12 +111,8 @@ else if (percentageCompleted > 0)
                     await Task.Delay(5000);
                 }
             } while ((pageNr < salesData.Paging.TotalPages));
-
-            var brokerSaleObjects = saleObjects.GroupBy(s => s.BrokerName);
-            var orderedBrokerSaleObjects = brokerSaleObjects.OrderByDescending(group => group.Count());
-
-            topBrokers = orderedBrokerSaleObjects.Take(10).ToDictionary(group => group.Key, group => group.Count());
-            StateHasChanged();
         }
+
+        return saleObjects;
     }
 }
