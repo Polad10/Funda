@@ -1,5 +1,6 @@
 ﻿using Funda.Constants;
 using Funda.Enums;
+using Funda.Exceptions;
 using Funda.Helpers;
 using Funda.Models;
 using Funda.Services.Interfaces;
@@ -9,12 +10,13 @@ namespace Funda.Services
     public class FundaApi : IFundaApi
     {
         private const int PageSize = 25;
+        private const int MaxRetries = 5;
 
-        private IHttpClientFactory _httpClientFactory;
+        private HttpClient _httpClient;
 
         public FundaApi(IHttpClientFactory httpClientFactory)
         {
-            _httpClientFactory = httpClientFactory;
+            _httpClient = httpClientFactory.CreateClient(FundaApiConstants.FundaHttpClientName);
         }
 
         public async Task<List<SaleObject>> GetSaleObjects(string city, bool withTuin, Action<int>? progressCallback = null)
@@ -26,38 +28,48 @@ namespace Funda.Services
                 searchKeys.Add("tuin");
             }
 
-            var httpClient = _httpClientFactory.CreateClient(FundaApiConstants.FundaHttpClientName);
-
-            var urlBuilder = new FundaApiUrlBuilder(httpClient.BaseAddress);
+            var urlBuilder = new FundaApiUrlBuilder(_httpClient.BaseAddress);
             urlBuilder.SetType(FundaObjectType.Buy);
             urlBuilder.SetSearch(searchKeys);
             urlBuilder.SetPageSize(PageSize);
 
             var saleObjects = new List<SaleObject>();
-            var pageNr = 0;
+            var pageNr = 1;
 
             SalesData salesData = null;
 
             do
             {
+                salesData = await GetSalesData(pageNr, urlBuilder);
+                saleObjects.AddRange(salesData.SaleObjects);
+
+                progressCallback?.Invoke((pageNr * 100) / salesData.Paging.TotalPages);
+                pageNr++;
+            } while ((pageNr <= salesData.Paging.TotalPages));
+
+            return saleObjects;
+        }
+
+        private async Task<SalesData> GetSalesData(int pageNr, FundaApiUrlBuilder urlBuilder)
+        {
+            int retryNr = 1;
+
+            do
+            {
                 try
                 {
-                    pageNr++;
-
                     urlBuilder.SetPageNr(pageNr);
-                    salesData = await httpClient.GetFromJsonAsync<SalesData>(urlBuilder.AbsoluteUrl);
 
-                    saleObjects.AddRange(salesData.SaleObjects);
-
-                    progressCallback?.Invoke((pageNr * 100) / salesData.Paging.TotalPages);
+                    return await _httpClient.GetFromJsonAsync<SalesData>(urlBuilder.AbsoluteUrl);
                 }
                 catch (HttpRequestException)
                 {
+                    retryNr++;
                     await Task.Delay(5000);
                 }
-            } while ((pageNr < salesData.Paging.TotalPages));
+            } while (retryNr <= MaxRetries);
 
-            return saleObjects;
+            throw new RetryLimitExceededException();
         }
     }
 }

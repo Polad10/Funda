@@ -1,5 +1,4 @@
 ﻿using Funda.Enums;
-using Microsoft.AspNetCore.WebUtilities;
 using System.Web;
 
 namespace Funda.Helpers

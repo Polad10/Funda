@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using Funda.Exceptions;
 @using Funda.Models;
 @using System.Diagnostics;
 @using Funda.Services.Interfaces;
@@ -16,38 +17,42 @@
 
 
 <div class="flex flex-1 justify-center mt-20">
-    @if(_topBrokers?.Count > 0)
-{
+    @if(!string.IsNullOrEmpty(_errorMessage))
+    {
+        <h1>@_errorMessage</h1>
+    }
+    else if(_topBrokers?.Count > 0)
+    {
         <div class="overflow-x-auto">
             <table class="table">
-            <thead>
-                <tr>
-                    <th></th>
-                    <th>Broker Name</th>
-                    <th>Number of objects in sale</th>
-                </tr>
-            </thead>
-            <tbody>
-                @{var index = 1;}
-
-                @foreach (var broker in _topBrokers)
-                {
+                <thead>
                     <tr>
-                        <th>@index</th>
-                        <td>@broker.Key</td>
-                        <td>@broker.Value</td>
+                        <th></th>
+                        <th>Broker Name</th>
+                        <th>Number of objects in sale</th>
                     </tr>
+                </thead>
+                <tbody>
+                    @{var index = 1;}
 
-                    index++;
-                }
-            </tbody>
-        </table>
-    </div>
-}
-else if (_progress > 0)
-{
-    <div class="radial-progress text-primary" style="--value:@_progress;">@($"{_progress}%")</div>
-}
+                    @foreach (var broker in _topBrokers)
+                    {
+                        <tr>
+                            <th>@index</th>
+                            <td>@broker.Key</td>
+                            <td>@broker.Value</td>
+                        </tr>
+
+                        index++;
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else if (_progress > 0)
+    {
+        <div class="radial-progress text-primary" style="--value:@_progress;">@($"{_progress}%")</div>
+    }
 </div>
 
 
@@ -57,17 +62,26 @@ else if (_progress > 0)
     private const string TopBrokersOption = "topBrokers";
     private const string TopBrokersWithTuinOption = "topBrokersWithTuin";
 
+    private string _errorMessage;
     private string _selectedOption = TopBrokersOption;
     private int _progress;
     private Dictionary<string, int> _topBrokers;
 
     private async void Calculate()
     {
+        _errorMessage = "";
         _progress = 0;
         _topBrokers = new Dictionary<string, int>();
 
-        var withTuin = _selectedOption == TopBrokersWithTuinOption;
-        _topBrokers = await _fundaStat.GetTopBrokers("amsterdam", withTuin, UpdateProgress);
+        try
+        {
+            var withTuin = _selectedOption == TopBrokersWithTuinOption;
+            _topBrokers = await _fundaStat.GetTopBrokers("amsterdam", withTuin, UpdateProgress);
+        }
+        catch(RetryLimitExceededException)
+        {
+            _errorMessage = "It took longer than expected :( Please try again later.";
+        }
 
         StateHasChanged();
     }
