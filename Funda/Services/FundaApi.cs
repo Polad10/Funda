@@ -5,6 +5,7 @@ using Funda.Helpers;
 using Funda.Models;
 using Funda.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Reflection;
 
 namespace Funda.Services
 {
@@ -14,9 +15,11 @@ namespace Funda.Services
         private const int MaxRetries = 5;
 
         private HttpClient _httpClient;
+        private int _delay;
 
         public FundaApi(IHttpClientFactory httpClientFactory)
         {
+            _delay = 5000;
             _httpClient = httpClientFactory.CreateClient(FundaApiConstants.FundaHttpClientName);
         }
 
@@ -49,6 +52,11 @@ namespace Funda.Services
             return saleObjects;
         }
 
+        public void SetDelayBetweenRetries(int millisecondsDelay)
+        {
+            _delay = millisecondsDelay;
+        }
+
         private async Task<SalesData> GetSalesData(string url, CancellationToken cancellationToken)
         {
             int retryNr = 1;
@@ -62,12 +70,12 @@ namespace Funda.Services
 
                 try
                 {
-                    return await _httpClient.GetFromJsonAsync<SalesData>(url);
+                    return await _httpClient.GetFromJsonAsync<SalesData>(url, cancellationToken);
                 }
                 catch (HttpRequestException)
                 {
                     retryNr++;
-                    await Task.Delay(5000);
+                    await Task.Delay(_delay, cancellationToken);
                 }
             } while (retryNr <= MaxRetries);
 

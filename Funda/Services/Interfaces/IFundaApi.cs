@@ -7,5 +7,7 @@ namespace Funda.Services.Interfaces
     {
         Task<List<SaleObject>> GetSaleObjects(string city, FundaObjectType type, bool withGarden,
             CancellationToken cancellationToken, Action<int>? progressCallback = null);
+
+        void SetDelayBetweenRetries(int millisecondsDelay);
     }
 }
