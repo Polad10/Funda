@@ -19,7 +19,7 @@ namespace Funda.Services
             _httpClient = httpClientFactory.CreateClient(FundaApiConstants.FundaHttpClientName);
         }
 
-        public async Task<List<SaleObject>> GetSaleObjects(string city, bool withTuin, Action<int>? progressCallback = null)
+        public async Task<List<SaleObject>> GetSaleObjects(string city, FundaObjectType type, bool withTuin, Action<int>? progressCallback = null)
         {
             var searchKeys = new List<string>() { city };
 
@@ -29,7 +29,7 @@ namespace Funda.Services
             }
 
             var urlBuilder = new FundaApiUrlBuilder(_httpClient.BaseAddress);
-            urlBuilder.SetType(FundaObjectType.Buy);
+            urlBuilder.SetType(type);
             urlBuilder.SetSearch(searchKeys);
             urlBuilder.SetPageSize(PageSize);
 

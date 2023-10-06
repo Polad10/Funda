@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using Funda.Enums;
 @using Funda.Exceptions;
 @using Funda.Models;
 @using System.Diagnostics;
@@ -7,7 +8,14 @@
 <PageTitle>Index</PageTitle>
 
 <div class="flex flex-row h-64 justify-center items-end">
-    <select class="select w-full max-w-xs" @bind="_selectedOption">
+    <input type="text" placeholder="City" class="input input-bordered w-full max-w-xs" @bind="_city" />
+
+    <select class="select select-bordered w-full max-w-xs ml-5" @bind="_selectedTypeOption">
+        <option value="@FundaObjectType.Buy" selected>Buy</option>
+        <option value="@FundaObjectType.Rent">Rent</option>
+    </select>
+
+    <select class="select select-bordered w-full max-w-xs ml-5" @bind="_selectedCalculationOption">
         <option value="@TopBrokersOption" selected>Top 10 Makelaars</option>
         <option value="@TopBrokersWithTuinOption">Top 10 Makelaars with tuin objects</option>
     </select>
@@ -62,9 +70,11 @@
     private const string TopBrokersOption = "topBrokers";
     private const string TopBrokersWithTuinOption = "topBrokersWithTuin";
 
-    private string _errorMessage;
-    private string _selectedOption = TopBrokersOption;
     private int _progress;
+    private string _errorMessage;
+    private string _city;
+    private string _selectedCalculationOption = TopBrokersOption;
+    private FundaObjectType _selectedTypeOption = FundaObjectType.Buy;
     private Dictionary<string, int> _topBrokers;
 
     private async void Calculate()
@@ -75,8 +85,8 @@
 
         try
         {
-            var withTuin = _selectedOption == TopBrokersWithTuinOption;
-            _topBrokers = await _fundaStat.GetTopBrokers("amsterdam", withTuin, UpdateProgress);
+            var withTuin = _selectedCalculationOption == TopBrokersWithTuinOption;
+            _topBrokers = await _fundaStat.GetTopBrokers(_city, _selectedTypeOption, withTuin, UpdateProgress);
         }
         catch(RetryLimitExceededException)
         {
