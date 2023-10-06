@@ -16,8 +16,8 @@
     </select>
 
     <select class="select select-bordered w-full max-w-xs ml-5" @bind="_selectedCalculationOption">
-        <option value="@TopBrokersOption" selected>Top 10 Makelaars</option>
-        <option value="@TopBrokersWithTuinOption">Top 10 Makelaars with tuin objects</option>
+        <option value="@TopAgentsOption" selected>Top 10 Makelaars</option>
+        <option value="@TopAgentsWithTuinOption">Top 10 Makelaars with tuin objects</option>
     </select>
 
     <button class="btn btn-primary ml-10" @onclick="Calculate">Calculate</button>
@@ -29,26 +29,26 @@
     {
         <h1>@_errorMessage</h1>
     }
-    else if(_topBrokers?.Count > 0)
+    else if(topAgents?.Count > 0)
     {
         <div class="overflow-x-auto">
             <table class="table">
                 <thead>
                     <tr>
                         <th></th>
-                        <th>Broker Name</th>
+                        <th>Real Estate Agent Name</th>
                         <th>Number of objects in sale</th>
                     </tr>
                 </thead>
                 <tbody>
                     @{var index = 1;}
 
-                    @foreach (var broker in _topBrokers)
+                    @foreach (var agent in topAgents)
                     {
                         <tr>
                             <th>@index</th>
-                            <td>@broker.Key</td>
-                            <td>@broker.Value</td>
+                            <td>@agent.Key</td>
+                            <td>@agent.Value</td>
                         </tr>
 
                         index++;
@@ -67,15 +67,15 @@
 @code {
     @inject IFundaStat _fundaStat;
 
-    private const string TopBrokersOption = "topBrokers";
-    private const string TopBrokersWithTuinOption = "topBrokersWithTuin";
+    private const string TopAgentsOption = "topAgents";
+    private const string TopAgentsWithTuinOption = "topAgentsWithTuin";
 
     private int _progress = -1;
     private string _errorMessage;
     private string _city;
-    private string _selectedCalculationOption = TopBrokersOption;
+    private string _selectedCalculationOption = TopAgentsOption;
     private FundaObjectType _selectedTypeOption = FundaObjectType.Buy;
-    private Dictionary<string, int> _topBrokers;
+    private Dictionary<string, int> topAgents;
 
     private CancellationTokenSource _cancellationTokenSource;
 
@@ -83,7 +83,7 @@
     {
         _errorMessage = "";
         _progress = 0;
-        _topBrokers = new Dictionary<string, int>();
+        topAgents = new Dictionary<string, int>();
 
         // cancel previous calculation
         _cancellationTokenSource?.Cancel();
@@ -91,8 +91,8 @@
 
         try
         {
-            var withTuin = _selectedCalculationOption == TopBrokersWithTuinOption;
-            _topBrokers = await _fundaStat.GetTopBrokers(_city, _selectedTypeOption, withTuin, _cancellationTokenSource.Token, UpdateProgress);
+            var withTuin = _selectedCalculationOption == TopAgentsWithTuinOption;
+            topAgents = await _fundaStat.GetTopAgents(_city, _selectedTypeOption, withTuin, _cancellationTokenSource.Token, UpdateProgress);
         }
         catch(RetryLimitExceededException)
         {

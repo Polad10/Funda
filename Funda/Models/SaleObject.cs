@@ -5,6 +5,6 @@ namespace Funda.Models
     public class SaleObject
     {
         [JsonPropertyName("MakelaarNaam")]
-        public string BrokerName { get; set; }
+        public string AgentName { get; set; }
     }
 }

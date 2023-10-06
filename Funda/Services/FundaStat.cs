@@ -11,15 +11,15 @@ namespace Funda.Services
         {
             _fundaApi = fundaApi;
         }
-        public async Task<Dictionary<string, int>> GetTopBrokers(string city, FundaObjectType type, bool withTuin,
+        public async Task<Dictionary<string, int>> GetTopAgents(string city, FundaObjectType type, bool withTuin,
             CancellationToken cancellationToken, Action<int>? progressCallback = null, int top = 10)
         {
             var saleObjects = await _fundaApi.GetSaleObjects(city, type, withTuin, cancellationToken, progressCallback);
 
-            var brokerSaleObjects = saleObjects.GroupBy(s => s.BrokerName);
-            var orderedBrokerSaleObjects = brokerSaleObjects.OrderByDescending(group => group.Count());
+            var agentSaleObjects = saleObjects.GroupBy(s => s.AgentName);
+            var orderedAgentSaleObjects = agentSaleObjects.OrderByDescending(group => group.Count());
 
-            return orderedBrokerSaleObjects.Take(top).ToDictionary(group => group.Key, group => group.Count());
+            return orderedAgentSaleObjects.Take(top).ToDictionary(group => group.Key, group => group.Count());
         }
     }
 }
