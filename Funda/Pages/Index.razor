@@ -1,11 +1,12 @@
 ﻿@page "/"
 @using Funda.Models;
 @using System.Diagnostics;
+@using Funda.Services.Interfaces;
 
 <PageTitle>Index</PageTitle>
 
 <div class="flex flex-row h-64 justify-center items-end">
-    <select class="select w-full max-w-xs" @bind="selectedOption">
+    <select class="select w-full max-w-xs" @bind="_selectedOption">
         <option value="@TopBrokersOption" selected>Top 10 Makelaars</option>
         <option value="@TopBrokersWithTuinOption">Top 10 Makelaars with tuin objects</option>
     </select>
@@ -15,7 +16,7 @@
 
 
 <div class="flex flex-1 justify-center mt-20">
-    @if(topBrokers?.Count > 0)
+    @if(_topBrokers?.Count > 0)
 {
         <div class="overflow-x-auto">
             <table class="table">
@@ -29,7 +30,7 @@
             <tbody>
                 @{var index = 1;}
 
-                @foreach (var broker in topBrokers)
+                @foreach (var broker in _topBrokers)
                 {
                     <tr>
                         <th>@index</th>
@@ -43,76 +44,37 @@
         </table>
     </div>
 }
-else if (percentageCompleted > 0)
+else if (_progress > 0)
 {
-    <div class="radial-progress text-primary" style="--value:@percentageCompleted;">@($"{percentageCompleted}%")</div>
+    <div class="radial-progress text-primary" style="--value:@_progress;">@($"{_progress}%")</div>
 }
 </div>
 
 
 @code {
+    @inject IFundaStat _fundaStat;
+
     private const string TopBrokersOption = "topBrokers";
     private const string TopBrokersWithTuinOption = "topBrokersWithTuin";
 
-    private string selectedOption = TopBrokersOption;
-    private int pageNr;
-    private int percentageCompleted;
-    private Dictionary<string, int> topBrokers;
+    private string _selectedOption = TopBrokersOption;
+    private int _progress;
+    private Dictionary<string, int> _topBrokers;
 
     private async void Calculate()
     {
-        pageNr = 0;
-        percentageCompleted = 0;
-        topBrokers = selectedOption == TopBrokersOption ? await GetTopBrokers(withTuin: false) : await GetTopBrokers(withTuin: true);
+        _progress = 0;
+        _topBrokers = new Dictionary<string, int>();
+
+        var withTuin = _selectedOption == TopBrokersWithTuinOption;
+        _topBrokers = await _fundaStat.GetTopBrokers(withTuin, UpdateProgress);
 
         StateHasChanged();
     }
 
-    private async Task<Dictionary<string, int>> GetTopBrokers(bool withTuin, int top = 10)
+    private void UpdateProgress(int progress)
     {
-        var saleObjects = await GetSaleObjects(withTuin);
-
-        var brokerSaleObjects = saleObjects.GroupBy(s => s.BrokerName);
-        var orderedBrokerSaleObjects = brokerSaleObjects.OrderByDescending(group => group.Count());
-
-        return orderedBrokerSaleObjects.Take(top).ToDictionary(group => group.Key, group => group.Count());
-    } 
-
-    private async Task<List<SaleObject>> GetSaleObjects(bool withTuin = false)
-    {
-        var baseUrl = "http://partnerapi.funda.nl/feeds/Aanbod.svc/json/ac1b0b1572524640a0ecc54de453ea9f/?type=koop&zo=/amsterdam/";
-
-        if(withTuin)
-        {
-            baseUrl = $"{baseUrl}/tuin/";
-        }
-
-        var saleObjects = new List<SaleObject>();
-
-        using (var client = new HttpClient())
-        {
-            SalesData salesData = null;
-
-            do
-            {
-                try
-                {
-                    pageNr++;
-                    var url = $"{baseUrl}&page={pageNr}&pagesize=25";
-                    salesData = await client.GetFromJsonAsync<SalesData>(url);
-
-                    saleObjects.AddRange(salesData.SaleObjects);
-
-                    percentageCompleted = (pageNr * 100) / salesData.Paging.TotalPages;
-                    StateHasChanged();
-                }
-                catch (HttpRequestException)
-                {
-                    await Task.Delay(5000);
-                }
-            } while ((pageNr < salesData.Paging.TotalPages));
-        }
-
-        return saleObjects;
+        _progress = progress;
+        StateHasChanged();
     }
 }
