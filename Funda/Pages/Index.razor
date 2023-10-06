@@ -77,20 +77,30 @@
     private FundaObjectType _selectedTypeOption = FundaObjectType.Buy;
     private Dictionary<string, int> _topBrokers;
 
+    private CancellationTokenSource _cancellationTokenSource;
+
     private async void Calculate()
     {
         _errorMessage = "";
         _progress = 0;
         _topBrokers = new Dictionary<string, int>();
 
+        // cancel previous calculation
+        _cancellationTokenSource?.Cancel();
+        _cancellationTokenSource = new CancellationTokenSource();
+
         try
         {
             var withTuin = _selectedCalculationOption == TopBrokersWithTuinOption;
-            _topBrokers = await _fundaStat.GetTopBrokers(_city, _selectedTypeOption, withTuin, UpdateProgress);
+            _topBrokers = await _fundaStat.GetTopBrokers(_city, _selectedTypeOption, withTuin, _cancellationTokenSource.Token, UpdateProgress);
         }
         catch(RetryLimitExceededException)
         {
             _errorMessage = "It took longer than expected :( Please try again later.";
+        }
+        catch(OperationCanceledException ex)
+        {
+            Debug.WriteLine(ex);
         }
 
         StateHasChanged();

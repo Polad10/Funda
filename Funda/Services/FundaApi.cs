@@ -19,7 +19,8 @@ namespace Funda.Services
             _httpClient = httpClientFactory.CreateClient(FundaApiConstants.FundaHttpClientName);
         }
 
-        public async Task<List<SaleObject>> GetSaleObjects(string city, FundaObjectType type, bool withTuin, Action<int>? progressCallback = null)
+        public async Task<List<SaleObject>> GetSaleObjects(string city, FundaObjectType type, bool withTuin,
+            CancellationToken cancellationToken, Action<int>? progressCallback = null)
         {
             var searchKeys = new List<string>() { city };
 
@@ -40,6 +41,11 @@ namespace Funda.Services
 
             do
             {
+                if(cancellationToken.IsCancellationRequested)
+                {
+                    throw new OperationCanceledException();
+                }
+
                 salesData = await GetSalesData(pageNr, urlBuilder);
                 saleObjects.AddRange(salesData.SaleObjects);
 
