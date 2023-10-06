@@ -67,7 +67,7 @@ else if (_progress > 0)
         _topBrokers = new Dictionary<string, int>();
 
         var withTuin = _selectedOption == TopBrokersWithTuinOption;
-        _topBrokers = await _fundaStat.GetTopBrokers(withTuin, UpdateProgress);
+        _topBrokers = await _fundaStat.GetTopBrokers("amsterdam", withTuin, UpdateProgress);
 
         StateHasChanged();
     }

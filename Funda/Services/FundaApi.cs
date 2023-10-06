@@ -1,45 +1,61 @@
-﻿using Funda.Models;
+﻿using Funda.Constants;
+using Funda.Enums;
+using Funda.Helpers;
+using Funda.Models;
 using Funda.Services.Interfaces;
 
 namespace Funda.Services
 {
     public class FundaApi : IFundaApi
     {
-        public async Task<List<SaleObject>> GetSaleObjects(bool withTuin = false, Action<int>? progressCallback = null)
-        {
-            var baseUrl = "http://partnerapi.funda.nl/feeds/Aanbod.svc/json/ac1b0b1572524640a0ecc54de453ea9f/?type=koop&zo=/amsterdam/";
+        private const int PageSize = 25;
 
-            if (withTuin)
+        private IHttpClientFactory _httpClientFactory;
+
+        public FundaApi(IHttpClientFactory httpClientFactory)
+        {
+            _httpClientFactory = httpClientFactory;
+        }
+
+        public async Task<List<SaleObject>> GetSaleObjects(string city, bool withTuin, Action<int>? progressCallback = null)
+        {
+            var searchKeys = new List<string>() { city };
+
+            if(withTuin)
             {
-                baseUrl = $"{baseUrl}/tuin/";
+                searchKeys.Add("tuin");
             }
+
+            var httpClient = _httpClientFactory.CreateClient(FundaApiConstants.FundaHttpClientName);
+
+            var urlBuilder = new FundaApiUrlBuilder(httpClient.BaseAddress);
+            urlBuilder.SetType(FundaObjectType.Buy);
+            urlBuilder.SetSearch(searchKeys);
+            urlBuilder.SetPageSize(PageSize);
 
             var saleObjects = new List<SaleObject>();
             var pageNr = 0;
 
+            SalesData salesData = null;
 
-            using (var client = new HttpClient())
+            do
             {
-                SalesData salesData = null;
-
-                do
+                try
                 {
-                    try
-                    {
-                        pageNr++;
-                        var url = $"{baseUrl}&page={pageNr}&pagesize=25";
-                        salesData = await client.GetFromJsonAsync<SalesData>(url);
+                    pageNr++;
 
-                        saleObjects.AddRange(salesData.SaleObjects);
+                    urlBuilder.SetPageNr(pageNr);
+                    salesData = await httpClient.GetFromJsonAsync<SalesData>(urlBuilder.AbsoluteUrl);
 
-                        progressCallback?.Invoke((pageNr * 100) / salesData.Paging.TotalPages);
-                    }
-                    catch (HttpRequestException)
-                    {
-                        await Task.Delay(5000);
-                    }
-                } while ((pageNr < salesData.Paging.TotalPages));
-            }
+                    saleObjects.AddRange(salesData.SaleObjects);
+
+                    progressCallback?.Invoke((pageNr * 100) / salesData.Paging.TotalPages);
+                }
+                catch (HttpRequestException)
+                {
+                    await Task.Delay(5000);
+                }
+            } while ((pageNr < salesData.Paging.TotalPages));
 
             return saleObjects;
         }

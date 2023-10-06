@@ -1,13 +1,18 @@
 using Funda.Services;
 using Funda.Services.Interfaces;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
+using Funda.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
+
+builder.Services.AddHttpClient(FundaApiConstants.FundaHttpClientName, client =>
+{
+    client.BaseAddress = new Uri("http://partnerapi.funda.nl/feeds/Aanbod.svc/json/ac1b0b1572524640a0ecc54de453ea9f");
+});
+
 builder.Services.AddSingleton<IFundaApi, FundaApi>();
 builder.Services.AddSingleton<IFundaStat, FundaStat>();
 
