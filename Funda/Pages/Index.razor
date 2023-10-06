@@ -57,7 +57,7 @@
             </table>
         </div>
     }
-    else if (_progress > 0)
+    else if (_progress >= 0)
     {
         <div class="radial-progress text-primary" style="--value:@_progress;">@($"{_progress}%")</div>
     }
@@ -70,7 +70,7 @@
     private const string TopBrokersOption = "topBrokers";
     private const string TopBrokersWithTuinOption = "topBrokersWithTuin";
 
-    private int _progress;
+    private int _progress = -1;
     private string _errorMessage;
     private string _city;
     private string _selectedCalculationOption = TopBrokersOption;
