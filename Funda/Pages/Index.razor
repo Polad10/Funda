@@ -17,7 +17,7 @@
 
     <select class="select select-bordered w-full max-w-xs ml-5" @bind="_selectedCalculationOption">
         <option value="@TopAgentsOption" selected>Top 10 Makelaars</option>
-        <option value="@TopAgentsWithTuinOption">Top 10 Makelaars with tuin objects</option>
+        <option value="@TopAgentsWithGardenOption">Top 10 Makelaars with garden objects</option>
     </select>
 
     <button class="btn btn-primary ml-10" @onclick="Calculate">Calculate</button>
@@ -68,7 +68,7 @@
     @inject IFundaStat _fundaStat;
 
     private const string TopAgentsOption = "topAgents";
-    private const string TopAgentsWithTuinOption = "topAgentsWithTuin";
+    private const string TopAgentsWithGardenOption = "topAgentsWithGarden";
 
     private int _progress = -1;
     private string _errorMessage;
@@ -91,8 +91,8 @@
 
         try
         {
-            var withTuin = _selectedCalculationOption == TopAgentsWithTuinOption;
-            topAgents = await _fundaStat.GetTopAgents(_city, _selectedTypeOption, withTuin, _cancellationTokenSource.Token, UpdateProgress);
+            var withGarden = _selectedCalculationOption == TopAgentsWithGardenOption;
+            topAgents = await _fundaStat.GetTopAgents(_city, _selectedTypeOption, withGarden, _cancellationTokenSource.Token, UpdateProgress);
         }
         catch(RetryLimitExceededException)
         {

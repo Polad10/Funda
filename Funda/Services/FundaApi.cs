@@ -20,10 +20,10 @@ namespace Funda.Services
             _httpClient = httpClientFactory.CreateClient(FundaApiConstants.FundaHttpClientName);
         }
 
-        public async Task<List<SaleObject>> GetSaleObjects(string city, FundaObjectType type, bool withTuin,
+        public async Task<List<SaleObject>> GetSaleObjects(string city, FundaObjectType type, bool withGarden,
             CancellationToken cancellationToken, Action<int>? progressCallback = null)
         {
-            var urlBuilder = CreateFundaApiUrlBuilder(city, type, withTuin);
+            var urlBuilder = CreateFundaApiUrlBuilder(city, type, withGarden);
 
             var saleObjects = new List<SaleObject>();
             var pageNr = 1;
@@ -74,13 +74,13 @@ namespace Funda.Services
             throw new RetryLimitExceededException();
         }
 
-        private FundaApiUrlBuilder CreateFundaApiUrlBuilder(string city, FundaObjectType type, bool withTuin)
+        private FundaApiUrlBuilder CreateFundaApiUrlBuilder(string city, FundaObjectType type, bool withGarden)
         {
             var urlBuilder = new FundaApiUrlBuilder(_httpClient.BaseAddress);
 
             var searchKeys = new List<string>() { city };
 
-            if (withTuin)
+            if (withGarden)
             {
                 searchKeys.Add("tuin");
             }
