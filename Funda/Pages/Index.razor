@@ -102,6 +102,10 @@
         {
             Debug.WriteLine(ex);
         }
+        catch(Exception)
+        {
+            _errorMessage = "Something went wrong :( Please try again later.";
+        }
 
         StateHasChanged();
     }
