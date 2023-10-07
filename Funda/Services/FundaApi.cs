@@ -15,11 +15,11 @@ namespace Funda.Services
         private const int MaxRetries = 5;
 
         private HttpClient _httpClient;
-        private int _delay;
+        private int _millisecondsDelay;
 
         public FundaApi(IHttpClientFactory httpClientFactory)
         {
-            _delay = 5000;
+            _millisecondsDelay = 5000;
             _httpClient = httpClientFactory.CreateClient(FundaApiConstants.FundaHttpClientName);
         }
 
@@ -54,7 +54,7 @@ namespace Funda.Services
 
         public void SetDelayBetweenRetries(int millisecondsDelay)
         {
-            _delay = millisecondsDelay;
+            _millisecondsDelay = millisecondsDelay;
         }
 
         private async Task<SalesData> GetSalesData(string url, CancellationToken cancellationToken)
@@ -75,7 +75,7 @@ namespace Funda.Services
                 catch (HttpRequestException)
                 {
                     retryNr++;
-                    await Task.Delay(_delay, cancellationToken);
+                    await Task.Delay(_millisecondsDelay, cancellationToken);
                 }
             } while (retryNr <= MaxRetries);
 
