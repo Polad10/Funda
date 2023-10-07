@@ -93,6 +93,11 @@
         {
             var withGarden = _selectedCalculationOption == TopAgentsWithGardenOption;
             topAgents = await _fundaStat.GetTopAgents(_city, _selectedTypeOption, withGarden, _cancellationTokenSource.Token, UpdateProgress);
+
+            if (topAgents == null || topAgents.Count == 0)
+            {
+                _errorMessage = "No data found.";
+            }
         }
         catch(RetryLimitExceededException)
         {
@@ -105,11 +110,6 @@
         catch(Exception)
         {
             _errorMessage = "Something went wrong :( Please try again later.";
-        }
-
-        if(topAgents == null || topAgents?.Count == 0)
-        {
-            _errorMessage = "No data found.";
         }
 
         StateHasChanged();
