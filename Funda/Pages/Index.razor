@@ -16,8 +16,8 @@
     </select>
 
     <select class="select select-bordered w-full max-w-xs ml-5" @bind="_selectedCalculationOption">
-        <option value="@TopAgentsOption" selected>Top 10 Makelaars</option>
-        <option value="@TopAgentsWithGardenOption">Top 10 Makelaars with garden objects</option>
+        <option value="@TopAgentsOption" selected>Top 10 Real Estate Agents</option>
+        <option value="@TopAgentsWithGardenOption">Top 10 Real Estate Agents with garden objects</option>
     </select>
 
     <button class="btn btn-primary ml-10" @onclick="Calculate">Calculate</button>
@@ -105,6 +105,11 @@
         catch(Exception)
         {
             _errorMessage = "Something went wrong :( Please try again later.";
+        }
+
+        if(topAgents == null || topAgents?.Count == 0)
+        {
+            _errorMessage = "No data found.";
         }
 
         StateHasChanged();
