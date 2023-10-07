@@ -19,7 +19,7 @@ namespace Funda.Services
 
         public FundaApi(IHttpClientFactory httpClientFactory)
         {
-            _millisecondsDelay = 5000;
+            _millisecondsDelay = 10000;
             _httpClient = httpClientFactory.CreateClient(FundaApiConstants.FundaHttpClientName);
         }
 
@@ -61,11 +61,16 @@ namespace Funda.Services
         {
             int retryNr = 1;
 
-            do
+            while (retryNr <= MaxRetries)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
                     throw new OperationCanceledException();
+                }
+                
+                if(retryNr > 1)
+                {
+                    await Task.Delay(_millisecondsDelay, cancellationToken);
                 }
 
                 try
@@ -75,9 +80,8 @@ namespace Funda.Services
                 catch (HttpRequestException)
                 {
                     retryNr++;
-                    await Task.Delay(_millisecondsDelay, cancellationToken);
                 }
-            } while (retryNr <= MaxRetries);
+            }
 
             throw new RetryLimitExceededException();
         }
